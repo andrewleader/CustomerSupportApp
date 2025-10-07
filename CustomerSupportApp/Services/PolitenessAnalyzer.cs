@@ -35,7 +35,7 @@ namespace CustomerSupportApp.Services
         private List<OrtEpDevice>? _availableDevices;
         private OrtEpDevice? _selectedDevice;
         private const int MaxSequenceLength = 512;
-        private const string ModelPath = "C:\\Users\\aleader\\Downloads\\model.onnx";
+        private const string ModelPath = "C:\\Users\\aleader\\Downloads\\model_quantized.onnx";
 
         public event EventHandler<string>? InitializationStatusChanged;
 
