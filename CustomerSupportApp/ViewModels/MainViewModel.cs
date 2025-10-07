@@ -126,7 +126,12 @@ namespace CustomerSupportApp.ViewModels
         {
             if (SelectedQuestion?.SuggestedResponses != null && SelectedQuestion.SuggestedResponses.Count > 0)
             {
-                _currentResponseIndex = _random.Next(0, SelectedQuestion.SuggestedResponses.Count);
+                int newIndex;
+                do
+                {
+                    newIndex = _random.Next(0, SelectedQuestion.SuggestedResponses.Count);
+                } while (newIndex == _currentResponseIndex);
+                _currentResponseIndex = newIndex;
                 ResponseText = SelectedQuestion.SuggestedResponses[_currentResponseIndex];
             }
         }
