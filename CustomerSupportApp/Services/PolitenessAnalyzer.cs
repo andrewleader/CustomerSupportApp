@@ -103,7 +103,7 @@ namespace CustomerSupportApp.Services
             return new InferenceSession("C:\\Users\\aleader\\Downloads\\model.onnx", sessionOptions);
         }
 
-        public async Task<(PolitenessLevel level, string description)> AnalyzeTextAsync(string text)
+        public async Task<(PolitenessLevel level, string description, long inferenceTimeMs)> AnalyzeTextAsync(string text)
         {
             if (!_isInitialized)
             {
@@ -112,7 +112,7 @@ namespace CustomerSupportApp.Services
 
             if (string.IsNullOrWhiteSpace(text))
             {
-                return (PolitenessLevel.Neutral, "No text to analyze");
+                return (PolitenessLevel.Neutral, "No text to analyze", 0);
             }
 
             if (_inferenceSession == null || _tokenizer == null)
@@ -120,11 +120,14 @@ namespace CustomerSupportApp.Services
                 throw new InvalidOperationException("Model not initialized properly");
             }
 
-            // Run inference on background thread
+            // Run inference on background thread and measure time
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var level = await Task.Run(() => RunInference(text));
+            stopwatch.Stop();
+            
             var description = GetPolitenessDescription(level);
 
-            return (level, description);
+            return (level, description, stopwatch.ElapsedMilliseconds);
         }
 
         private PolitenessLevel RunInference(string text)

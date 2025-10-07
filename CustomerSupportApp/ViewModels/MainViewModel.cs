@@ -20,6 +20,7 @@ namespace CustomerSupportApp.ViewModels
         private CancellationTokenSource? _debounceTokenSource;
         private string _politenessStatus = string.Empty;
         private string _politenessLevel = string.Empty;
+        private string _inferenceTime = string.Empty;
         private const int DebounceDelayMs = 800;
 
         public ObservableCollection<CustomerQuestion> CustomerQuestions { get; set; }
@@ -79,6 +80,19 @@ namespace CustomerSupportApp.ViewModels
             }
         }
 
+        public string InferenceTime
+        {
+            get => _inferenceTime;
+            set
+            {
+                if (_inferenceTime != value)
+                {
+                    _inferenceTime = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public void GetRandomResponse()
         {
             if (SelectedQuestion?.SuggestedResponses != null && SelectedQuestion.SuggestedResponses.Count > 0)
@@ -101,6 +115,7 @@ namespace CustomerSupportApp.ViewModels
                 {
                     PolitenessStatus = "";
                     PolitenessLevel = "";
+                    InferenceTime = "";
                     return;
                 }
 
@@ -112,12 +127,14 @@ namespace CustomerSupportApp.ViewModels
                 {
                     PolitenessStatus = "Running inference...";
                     PolitenessLevel = "";
+                    InferenceTime = "";
 
                     var result = await _politenessAnalyzer.AnalyzeTextAsync(_responseText);
 
                     if (!token.IsCancellationRequested)
                     {
                         PolitenessLevel = GetPolitenessLevelText(result.level);
+                        InferenceTime = $"{result.inferenceTimeMs}ms";
                         PolitenessStatus = "";
                     }
                 }
@@ -130,6 +147,7 @@ namespace CustomerSupportApp.ViewModels
             {
                 PolitenessStatus = "Analysis error";
                 PolitenessLevel = "";
+                InferenceTime = "";
             }
         }
 

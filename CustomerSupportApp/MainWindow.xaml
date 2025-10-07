@@ -345,7 +345,7 @@
                             </Grid.ColumnDefinitions>
 
                             <!-- Politeness Indicator -->
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                 <!-- Initialization/Processing Status -->
                                 <TextBlock Text="{Binding PolitenessStatus}" 
                                            FontSize="13" 
@@ -353,24 +353,33 @@
                                            Visibility="{Binding PolitenessStatus, Converter={StaticResource StringEmptyToVisibilityConverter}}"
                                            VerticalAlignment="Center"/>
                                 
-                                <!-- Politeness Level Badge -->
-                                <StackPanel Orientation="Horizontal" 
+                                <!-- Politeness Level Badge and Time -->
+                                <StackPanel Orientation="Vertical" 
                                            Visibility="{Binding PolitenessLevel, Converter={StaticResource StringEmptyToVisibilityConverter}}">
-                                    <TextBlock Text="Politeness:" 
-                                               FontSize="13" 
-                                               FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextSecondaryColor}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,0"/>
-                                    <Border Background="{Binding PolitenessLevel, Converter={StaticResource PolitenessLevelColorConverter}}"
-                                            CornerRadius="12" 
-                                            Padding="12,4"
-                                            VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding PolitenessLevel}" 
-                                                   FontSize="12" 
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Politeness:" 
+                                                   FontSize="13" 
                                                    FontWeight="SemiBold"
-                                                   Foreground="White"/>
-                                    </Border>
+                                                   Foreground="{StaticResource TextSecondaryColor}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0"/>
+                                        <Border Background="{Binding PolitenessLevel, Converter={StaticResource PolitenessLevelColorConverter}}"
+                                                CornerRadius="12" 
+                                                Padding="12,4"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding PolitenessLevel}" 
+                                                       FontSize="12" 
+                                                       FontWeight="SemiBold"
+                                                       Foreground="White"/>
+                                        </Border>
+                                    </StackPanel>
+                                    
+                                    <!-- Inference Time -->
+                                    <TextBlock Text="{Binding InferenceTime, StringFormat='Inference time: {0}'}" 
+                                               FontSize="11" 
+                                               Foreground="{StaticResource TextSecondaryColor}"
+                                               Margin="0,4,0,0"
+                                               Visibility="{Binding InferenceTime, Converter={StaticResource StringEmptyToVisibilityConverter}}"/>
                                 </StackPanel>
                             </StackPanel>
 
