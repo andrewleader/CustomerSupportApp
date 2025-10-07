@@ -14,6 +14,8 @@
         <!-- Converters -->
         <converters:PriorityColorConverter x:Key="PriorityColorConverter"/>
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <converters:PolitenessLevelColorConverter x:Key="PolitenessLevelColorConverter"/>
+        <converters:StringEmptyToVisibilityConverter x:Key="StringEmptyToVisibilityConverter"/>
         
         <!-- Color Palette -->
         <SolidColorBrush x:Key="PrimaryColor" Color="#0078D4"/>
@@ -336,10 +338,48 @@
                             BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"
                             Padding="32,16"
                             Visibility="{Binding SelectedQuestion, Converter={StaticResource NullToVisibilityConverter}}">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="Send Response" Style="{StaticResource PrimaryButtonStyle}"
-                                    Click="SendButton_Click" Padding="24,10"/>
-                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Politeness Indicator -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- Initialization/Processing Status -->
+                                <TextBlock Text="{Binding PolitenessStatus}" 
+                                           FontSize="13" 
+                                           Foreground="{StaticResource TextSecondaryColor}"
+                                           Visibility="{Binding PolitenessStatus, Converter={StaticResource StringEmptyToVisibilityConverter}}"
+                                           VerticalAlignment="Center"/>
+                                
+                                <!-- Politeness Level Badge -->
+                                <StackPanel Orientation="Horizontal" 
+                                           Visibility="{Binding PolitenessLevel, Converter={StaticResource StringEmptyToVisibilityConverter}}">
+                                    <TextBlock Text="Politeness:" 
+                                               FontSize="13" 
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondaryColor}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0"/>
+                                    <Border Background="{Binding PolitenessLevel, Converter={StaticResource PolitenessLevelColorConverter}}"
+                                            CornerRadius="12" 
+                                            Padding="12,4"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding PolitenessLevel}" 
+                                                   FontSize="12" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="White"/>
+                                    </Border>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Send Button -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="Send Response" Style="{StaticResource PrimaryButtonStyle}"
+                                        Click="SendButton_Click" Padding="24,10"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
 
                     <!-- Empty State -->

@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using CustomerSupportApp.Models;
+using CustomerSupportApp.Services;
 
 namespace CustomerSupportApp.ViewModels
 {
@@ -13,6 +16,11 @@ namespace CustomerSupportApp.ViewModels
         private string _responseText = string.Empty;
         private int _currentResponseIndex = 0;
         private Random _random = new Random();
+        private PolitenessAnalyzer _politenessAnalyzer;
+        private CancellationTokenSource? _debounceTokenSource;
+        private string _politenessStatus = string.Empty;
+        private string _politenessLevel = string.Empty;
+        private const int DebounceDelayMs = 800;
 
         public ObservableCollection<CustomerQuestion> CustomerQuestions { get; set; }
 
@@ -40,6 +48,33 @@ namespace CustomerSupportApp.ViewModels
                 {
                     _responseText = value;
                     OnPropertyChanged();
+                    _ = AnalyzeResponseWithDebounceAsync();
+                }
+            }
+        }
+
+        public string PolitenessStatus
+        {
+            get => _politenessStatus;
+            set
+            {
+                if (_politenessStatus != value)
+                {
+                    _politenessStatus = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string PolitenessLevel
+        {
+            get => _politenessLevel;
+            set
+            {
+                if (_politenessLevel != value)
+                {
+                    _politenessLevel = value;
+                    OnPropertyChanged();
                 }
             }
         }
@@ -53,8 +88,71 @@ namespace CustomerSupportApp.ViewModels
             }
         }
 
+        private async Task AnalyzeResponseWithDebounceAsync()
+        {
+            // Cancel previous debounce
+            _debounceTokenSource?.Cancel();
+            _debounceTokenSource = new CancellationTokenSource();
+            var token = _debounceTokenSource.Token;
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(_responseText))
+                {
+                    PolitenessStatus = "";
+                    PolitenessLevel = "";
+                    return;
+                }
+
+                // Wait for debounce period
+                await Task.Delay(DebounceDelayMs, token);
+
+                // If not cancelled, proceed with analysis
+                if (!token.IsCancellationRequested)
+                {
+                    PolitenessStatus = "Running inference...";
+                    PolitenessLevel = "";
+
+                    var result = await _politenessAnalyzer.AnalyzeTextAsync(_responseText);
+
+                    if (!token.IsCancellationRequested)
+                    {
+                        PolitenessLevel = GetPolitenessLevelText(result.level);
+                        PolitenessStatus = "";
+                    }
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // Expected when debounce is cancelled
+            }
+            catch (Exception)
+            {
+                PolitenessStatus = "Analysis error";
+                PolitenessLevel = "";
+            }
+        }
+
+        private string GetPolitenessLevelText(PolitenessLevel level)
+        {
+            return level switch
+            {
+                Services.PolitenessLevel.Polite => "Polite",
+                Services.PolitenessLevel.SomewhatPolite => "Somewhat Polite",
+                Services.PolitenessLevel.Neutral => "Neutral",
+                Services.PolitenessLevel.Impolite => "Impolite",
+                _ => "Unknown"
+            };
+        }
+
         public MainViewModel()
         {
+            _politenessAnalyzer = PolitenessAnalyzer.Instance;
+            _politenessAnalyzer.InitializationStatusChanged += OnPolitenessInitializationStatusChanged;
+
+            // Initialize the analyzer asynchronously
+            _ = InitializePolitenessAnalyzerAsync();
+
             CustomerQuestions = new ObservableCollection<CustomerQuestion>
             {
                 new CustomerQuestion
@@ -268,6 +366,23 @@ namespace CustomerSupportApp.ViewModels
                     }
                 }
             };
+        }
+
+        private async Task InitializePolitenessAnalyzerAsync()
+        {
+            try
+            {
+                await _politenessAnalyzer.InitializeAsync();
+            }
+            catch (Exception)
+            {
+                PolitenessStatus = "Initialization failed";
+            }
+        }
+
+        private void OnPolitenessInitializationStatusChanged(object? sender, string status)
+        {
+            PolitenessStatus = status;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
