@@ -1,0 +1,327 @@
+﻿<Window x:Class="CustomerSupportApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CustomerSupportApp"
+        xmlns:converters="clr-namespace:CustomerSupportApp.Converters"
+        mc:Ignorable="d"
+        Title="Contoso Customer Support" Height="700" Width="1200"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F5">
+    
+    <Window.Resources>
+        <!-- Converters -->
+        <converters:PriorityColorConverter x:Key="PriorityColorConverter"/>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        
+        <!-- Color Palette -->
+        <SolidColorBrush x:Key="PrimaryColor" Color="#0078D4"/>
+        <SolidColorBrush x:Key="PrimaryHoverColor" Color="#106EBE"/>
+        <SolidColorBrush x:Key="BackgroundColor" Color="#F5F5F5"/>
+        <SolidColorBrush x:Key="CardBackground" Color="White"/>
+        <SolidColorBrush x:Key="BorderColor" Color="#E1E1E1"/>
+        <SolidColorBrush x:Key="TextPrimaryColor" Color="#323130"/>
+        <SolidColorBrush x:Key="TextSecondaryColor" Color="#605E5C"/>
+        <SolidColorBrush x:Key="HighPriorityColor" Color="#D13438"/>
+        <SolidColorBrush x:Key="NormalPriorityColor" Color="#0078D4"/>
+        
+        <!-- Button Style -->
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource PrimaryColor}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="2" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource PrimaryHoverColor}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- ListBox Item Style -->
+        <Style x:Key="QuestionListItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Background" Value="{StaticResource CardBackground}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F3F2F1"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#E1DFDD"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{StaticResource PrimaryColor}" 
+                BorderBrush="{StaticResource BorderColor}" BorderThickness="0,0,0,1">
+            <Grid Margin="24,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Contoso" FontSize="24" FontWeight="Bold" 
+                               Foreground="White" VerticalAlignment="Center"/>
+                    <TextBlock Text="Customer Support" FontSize="18" 
+                               Foreground="#E1E1E1" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="400"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Panel - Inbox List -->
+            <Border Grid.Column="0" Background="{StaticResource CardBackground}" 
+                    BorderBrush="{StaticResource BorderColor}" BorderThickness="0,0,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Inbox Header -->
+                    <Border Grid.Row="0" Background="{StaticResource BackgroundColor}" 
+                            BorderBrush="{StaticResource BorderColor}" BorderThickness="0,0,0,1"
+                            Padding="20,16">
+                        <StackPanel>
+                            <TextBlock Text="Inbox" FontSize="20" FontWeight="SemiBold" 
+                                       Foreground="{StaticResource TextPrimaryColor}"/>
+                            <TextBlock Text="{Binding CustomerQuestions.Count, StringFormat='{}{0} messages'}" 
+                                       FontSize="13" Foreground="{StaticResource TextSecondaryColor}" 
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Question List -->
+                    <ListBox Grid.Row="1" 
+                             ItemsSource="{Binding CustomerQuestions}"
+                             SelectedItem="{Binding SelectedQuestion, Mode=TwoWay}"
+                             ItemContainerStyle="{StaticResource QuestionListItemStyle}"
+                             BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Customer Name & Priority -->
+                                    <Grid Grid.Row="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" Text="{Binding CustomerName}" 
+                                                   FontWeight="SemiBold" FontSize="14"
+                                                   Foreground="{StaticResource TextPrimaryColor}"/>
+                                        
+                                        <Border Grid.Column="1" 
+                                                Background="{Binding Priority, Converter={StaticResource PriorityColorConverter}}"
+                                                CornerRadius="2" Padding="6,2">
+                                            <TextBlock Text="{Binding Priority}" FontSize="11" 
+                                                       Foreground="White" FontWeight="SemiBold"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Subject -->
+                                    <TextBlock Grid.Row="1" Text="{Binding Subject}" 
+                                               FontSize="13" Margin="0,4,0,0"
+                                               Foreground="{StaticResource TextPrimaryColor}"
+                                               FontWeight="Medium"/>
+
+                                    <!-- Message Preview -->
+                                    <TextBlock Grid.Row="2" Text="{Binding Message}" 
+                                               FontSize="12" Margin="0,4,0,0"
+                                               Foreground="{StaticResource TextSecondaryColor}"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxHeight="36" TextWrapping="Wrap"/>
+
+                                    <!-- Date -->
+                                    <TextBlock Grid.Row="3" FontSize="11" Margin="0,4,0,0"
+                                               Foreground="{StaticResource TextSecondaryColor}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0:MMM dd, yyyy} at {0:hh:mm tt}">
+                                                <Binding Path="ReceivedDate"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Right Panel - Message Detail -->
+            <Border Grid.Column="1" Background="{StaticResource CardBackground}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Message Display Area -->
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                        <Grid Margin="32,24" Visibility="{Binding SelectedQuestion, Converter={StaticResource NullToVisibilityConverter}}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Subject -->
+                            <TextBlock Grid.Row="0" Text="{Binding SelectedQuestion.Subject}" 
+                                       FontSize="24" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryColor}"
+                                       TextWrapping="Wrap"/>
+
+                            <!-- From & Date Info -->
+                            <StackPanel Grid.Row="1" Margin="0,16,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" Text="From:" FontWeight="SemiBold" 
+                                               Foreground="{StaticResource TextSecondaryColor}"/>
+                                    <TextBlock Grid.Column="1" Foreground="{StaticResource TextPrimaryColor}">
+                                        <Run Text="{Binding SelectedQuestion.CustomerName}"/>
+                                        <Run Text=" &lt;" Foreground="{StaticResource TextSecondaryColor}"/><Run Text="{Binding SelectedQuestion.CustomerEmail}" Foreground="{StaticResource TextSecondaryColor}"/><Run Text="&gt;" Foreground="{StaticResource TextSecondaryColor}"/>
+                                    </TextBlock>
+                                </Grid>
+                                
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" Text="Date:" FontWeight="SemiBold" 
+                                               Foreground="{StaticResource TextSecondaryColor}"/>
+                                    <TextBlock Grid.Column="1" Foreground="{StaticResource TextPrimaryColor}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0:MMMM dd, yyyy} at {0:hh:mm tt}">
+                                                <Binding Path="SelectedQuestion.ReceivedDate"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Grid>
+
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" Text="Priority:" FontWeight="SemiBold" 
+                                               Foreground="{StaticResource TextSecondaryColor}"/>
+                                    <Border Grid.Column="1" 
+                                            Background="{Binding SelectedQuestion.Priority, Converter={StaticResource PriorityColorConverter}}"
+                                            CornerRadius="2" Padding="8,3" HorizontalAlignment="Left">
+                                        <TextBlock Text="{Binding SelectedQuestion.Priority}" 
+                                                   Foreground="White" FontWeight="SemiBold" FontSize="12"/>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- Separator -->
+                            <Border Grid.Row="2" Height="1" Background="{StaticResource BorderColor}" 
+                                    Margin="0,20,0,20"/>
+
+                            <!-- Message Content -->
+                            <TextBlock Grid.Row="3" Text="{Binding SelectedQuestion.Message}" 
+                                       FontSize="14" LineHeight="24"
+                                       Foreground="{StaticResource TextPrimaryColor}"
+                                       TextWrapping="Wrap"/>
+
+                            <!-- Response Section -->
+                            <StackPanel Grid.Row="4" Margin="0,32,0,0">
+                                <TextBlock Text="Your Response" FontSize="16" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimaryColor}" Margin="0,0,0,12"/>
+                                
+                                <TextBox Text="{Binding ResponseText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Height="150" TextWrapping="Wrap" 
+                                         AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                                         Padding="12" FontSize="14"
+                                         BorderBrush="{StaticResource BorderColor}" BorderThickness="1"/>
+                            </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
+
+                    <!-- Action Bar -->
+                    <Border Grid.Row="1" Background="{StaticResource BackgroundColor}" 
+                            BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0"
+                            Padding="32,16"
+                            Visibility="{Binding SelectedQuestion, Converter={StaticResource NullToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Send Response" Style="{StaticResource PrimaryButtonStyle}"
+                                    Click="SendButton_Click" Padding="24,10"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Empty State -->
+                    <StackPanel Grid.Row="0" Grid.RowSpan="2" 
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Visibility="{Binding SelectedQuestion, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Inverse}">
+                        <TextBlock Text="📧" FontSize="64" HorizontalAlignment="Center" Opacity="0.3"/>
+                        <TextBlock Text="Select a message to view" FontSize="18" 
+                                   Foreground="{StaticResource TextSecondaryColor}"
+                                   HorizontalAlignment="Center" Margin="0,16,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
