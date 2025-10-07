@@ -346,6 +346,23 @@
 
                             <!-- Politeness Indicator -->
                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <!-- Device Selector -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Device:" 
+                                               FontSize="13" 
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondaryColor}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0"/>
+                                    <ComboBox ItemsSource="{Binding AvailableDevices}"
+                                              SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
+                                              DisplayMemberPath="DisplayName"
+                                              MinWidth="250"
+                                              FontSize="12"
+                                              Padding="8,4"
+                                              BorderBrush="{StaticResource BorderColor}"/>
+                                </StackPanel>
+
                                 <!-- Initialization/Processing Status -->
                                 <TextBlock Text="{Binding PolitenessStatus}" 
                                            FontSize="13" 

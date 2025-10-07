@@ -16,14 +16,26 @@ namespace CustomerSupportApp.Services
         Impolite
     }
 
+    public class EpDeviceInfo
+    {
+        public string Name { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public OrtEpDevice Device { get; set; } = null!;
+    }
+
     public class PolitenessAnalyzer
     {
         private static PolitenessAnalyzer? _instance;
         private static readonly object _lock = new object();
-        private bool _isInitialized = false;
+        private bool _isPreInitialized = false;
+        private bool _isFullyInitialized = false;
         private InferenceSession? _inferenceSession;
         private BertTokenizer? _tokenizer;
+        private OrtEnv? _ortEnv;
+        private List<OrtEpDevice>? _availableDevices;
+        private OrtEpDevice? _selectedDevice;
         private const int MaxSequenceLength = 512;
+        private const string ModelPath = "C:\\Users\\aleader\\Downloads\\model.onnx";
 
         public event EventHandler<string>? InitializationStatusChanged;
 
@@ -49,9 +61,12 @@ namespace CustomerSupportApp.Services
             }
         }
 
-        public async Task InitializeAsync()
+        /// <summary>
+        /// Pre-initializes the analyzer - downloads EPs, loads tokenizer, and enumerates devices
+        /// </summary>
+        public async Task PreInitializeAsync()
         {
-            if (_isInitialized)
+            if (_isPreInitialized)
                 return;
 
             // Download EPs
@@ -61,53 +76,109 @@ namespace CustomerSupportApp.Services
             OnInitializationStatusChanged("Loading tokenizer...");
             _tokenizer = await Task.Run(() => new BertTokenizer());
 
-            OnInitializationStatusChanged("Loading politeness model...");
-            _inferenceSession = await Task.Run(() => CreateInferenceSession());
+            OnInitializationStatusChanged("Enumerating devices...");
+            await Task.Run(() =>
+            {
+                EnvironmentCreationOptions envOptions = new()
+                {
+                    logId = "PolitenessGuard",
+                    logLevel = OrtLoggingLevel.ORT_LOGGING_LEVEL_ERROR
+                };
 
-            OnInitializationStatusChanged("Model ready");
+                _ortEnv = OrtEnv.CreateInstanceWithOptions(ref envOptions);
+                _availableDevices = _ortEnv.GetEpDevices().ToList();
+            });
 
-            _isInitialized = true;
+            OnInitializationStatusChanged("Ready for device selection");
+            _isPreInitialized = true;
         }
 
-        private InferenceSession CreateInferenceSession()
+        /// <summary>
+        /// Gets the list of available EP devices
+        /// </summary>
+        public async Task<List<EpDeviceInfo>> GetAvailableDevicesAsync()
         {
-            // First we create a new instance of EnvironmentCreationOptions
-            EnvironmentCreationOptions envOptions = new()
+            if (!_isPreInitialized)
             {
-                logId = "PolitenessGuard",
-                logLevel = OrtLoggingLevel.ORT_LOGGING_LEVEL_ERROR
-            };
-
-            // And then use that to create the ORT environment
-            using var ortEnv = OrtEnv.CreateInstanceWithOptions(ref envOptions);
-
-            // 1. Enumerate devices
-            var epDevices = ortEnv.GetEpDevices();
-
-            const string epName = "DmlExecutionProvider";
-
-            // 2. Filter to your desired execution provider
-            var selectedEpDevices = epDevices
-                .Where(d => d.EpName == epName)
-                .ToList();
-
-            if (selectedEpDevices.Count == 0)
-            {
-                throw new InvalidOperationException($"{epName} is not available on this system.");
+                await PreInitializeAsync();
             }
 
-            // 3. Configure provider-specific options (varies based on EP)
-            // and append the EP with the correct devices (varies based on EP)
+            if (_availableDevices == null)
+                return new List<EpDeviceInfo>();
+
+            return _availableDevices.Select(d => new EpDeviceInfo
+            {
+                Name = d.EpName,
+                DisplayName = GetFriendlyDeviceName(d),
+                Device = d
+            }).ToList();
+        }
+
+        /// <summary>
+        /// Initializes the inference session with the selected device
+        /// </summary>
+        public async Task InitializeWithDeviceAsync(OrtEpDevice device)
+        {
+            if (!_isPreInitialized)
+            {
+                await PreInitializeAsync();
+            }
+
+            _selectedDevice = device;
+
+            OnInitializationStatusChanged($"Loading model with {GetFriendlyDeviceName(device)}...");
+            
+            // Dispose existing session if any
+            _inferenceSession?.Dispose();
+            
+            _inferenceSession = await Task.Run(() => CreateInferenceSession(device));
+
+            OnInitializationStatusChanged("Model ready");
+            _isFullyInitialized = true;
+        }
+
+        /// <summary>
+        /// Legacy initialization method - defaults to first available device
+        /// </summary>
+        public async Task InitializeAsync()
+        {
+            if (_isFullyInitialized)
+                return;
+
+            await PreInitializeAsync();
+
+            if (_availableDevices == null || _availableDevices.Count == 0)
+            {
+                throw new InvalidOperationException("No execution providers available");
+            }
+
+            // Use the first available device
+            await InitializeWithDeviceAsync(_availableDevices[0]);
+        }
+
+        private InferenceSession CreateInferenceSession(OrtEpDevice device)
+        {
+            if (_ortEnv == null)
+            {
+                throw new InvalidOperationException("OrtEnv not initialized");
+            }
+
             var sessionOptions = new SessionOptions();
             var epOptions = new Dictionary<string, string> { };
-            sessionOptions.AppendExecutionProvider(ortEnv, selectedEpDevices, epOptions);
+            sessionOptions.AppendExecutionProvider(_ortEnv, new List<OrtEpDevice> { device }, epOptions);
 
-            return new InferenceSession("C:\\Users\\aleader\\Downloads\\model.onnx", sessionOptions);
+            return new InferenceSession(ModelPath, sessionOptions);
+        }
+
+        private string GetFriendlyDeviceName(OrtEpDevice device)
+        {
+            // Format: "EPName"
+            return device.EpName;
         }
 
         public async Task<(PolitenessLevel level, string description, long inferenceTimeMs)> AnalyzeTextAsync(string text)
         {
-            if (!_isInitialized)
+            if (!_isFullyInitialized)
             {
                 await InitializeAsync();
             }

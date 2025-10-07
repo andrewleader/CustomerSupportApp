@@ -21,9 +21,38 @@ namespace CustomerSupportApp.ViewModels
         private string _politenessStatus = string.Empty;
         private string _politenessLevel = string.Empty;
         private string _inferenceTime = string.Empty;
+        private ObservableCollection<EpDeviceInfo> _availableDevices = new ObservableCollection<EpDeviceInfo>();
+        private EpDeviceInfo? _selectedDevice;
         private const int DebounceDelayMs = 800;
 
         public ObservableCollection<CustomerQuestion> CustomerQuestions { get; set; }
+
+        public ObservableCollection<EpDeviceInfo> AvailableDevices
+        {
+            get => _availableDevices;
+            set
+            {
+                if (_availableDevices != value)
+                {
+                    _availableDevices = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public EpDeviceInfo? SelectedDevice
+        {
+            get => _selectedDevice;
+            set
+            {
+                if (_selectedDevice != value)
+                {
+                    _selectedDevice = value;
+                    OnPropertyChanged();
+                    _ = OnDeviceSelectionChangedAsync();
+                }
+            }
+        }
 
         public CustomerQuestion? SelectedQuestion
         {
@@ -168,7 +197,7 @@ namespace CustomerSupportApp.ViewModels
             _politenessAnalyzer = PolitenessAnalyzer.Instance;
             _politenessAnalyzer.InitializationStatusChanged += OnPolitenessInitializationStatusChanged;
 
-            // Initialize the analyzer asynchronously
+            // Initialize the analyzer asynchronously and load devices
             _ = InitializePolitenessAnalyzerAsync();
 
             CustomerQuestions = new ObservableCollection<CustomerQuestion>
@@ -390,11 +419,44 @@ namespace CustomerSupportApp.ViewModels
         {
             try
             {
-                await _politenessAnalyzer.InitializeAsync();
+                // Pre-initialize (download EPs, load tokenizer, enumerate devices)
+                await _politenessAnalyzer.PreInitializeAsync();
+
+                // Get available devices
+                var devices = await _politenessAnalyzer.GetAvailableDevicesAsync();
+                AvailableDevices = new ObservableCollection<EpDeviceInfo>(devices);
+
+                // Select the first device by default
+                if (AvailableDevices.Count > 0)
+                {
+                    SelectedDevice = AvailableDevices[0];
+                }
             }
             catch (Exception)
             {
                 PolitenessStatus = "Initialization failed";
+            }
+        }
+
+        private async Task OnDeviceSelectionChangedAsync()
+        {
+            if (_selectedDevice == null)
+                return;
+
+            try
+            {
+                // Initialize the inference session with the selected device
+                await _politenessAnalyzer.InitializeWithDeviceAsync(_selectedDevice.Device);
+                
+                // Re-analyze current text if any
+                if (!string.IsNullOrWhiteSpace(_responseText))
+                {
+                    _ = AnalyzeResponseWithDebounceAsync();
+                }
+            }
+            catch (Exception)
+            {
+                PolitenessStatus = "Device initialization failed";
             }
         }
 
