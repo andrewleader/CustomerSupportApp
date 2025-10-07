@@ -1,3 +1,5 @@
+using Microsoft.ML.OnnxRuntime;
+using Microsoft.Windows.AI.MachineLearning;
 using System;
 using System.Threading.Tasks;
 
@@ -16,6 +18,7 @@ namespace CustomerSupportApp.Services
         private static PolitenessAnalyzer? _instance;
         private static readonly object _lock = new object();
         private bool _isInitialized = false;
+        private InferenceSession? _inferenceSession;
         private Random _random = new Random();
 
         public event EventHandler<string>? InitializationStatusChanged;
@@ -47,17 +50,50 @@ namespace CustomerSupportApp.Services
             if (_isInitialized)
                 return;
 
-            // Simulate model loading with status updates
-            OnInitializationStatusChanged("Initializing model...");
-            await Task.Delay(3000);
+            // Download EPs
+            OnInitializationStatusChanged("Downloading and registering EPs...");
+            await ExecutionProviderCatalog.GetDefault().EnsureAndRegisterCertifiedAsync();
 
             OnInitializationStatusChanged("Loading politeness model...");
-            await Task.Delay(3000);
+            _inferenceSession = await Task.Run(() => CreateInferenceSession());
 
             OnInitializationStatusChanged("Model ready");
-            await Task.Delay(300);
 
             _isInitialized = true;
+        }
+
+        private InferenceSession CreateInferenceSession()
+        {
+            // First we create a new instance of EnvironmentCreationOptions
+            EnvironmentCreationOptions envOptions = new()
+            {
+                logId = "WinMLDemo", // Use an ID of your own choice
+                logLevel = OrtLoggingLevel.ORT_LOGGING_LEVEL_ERROR
+            };
+
+            // And then use that to create the ORT environment
+            using var ortEnv = OrtEnv.CreateInstanceWithOptions(ref envOptions);
+
+            // 1. Enumerate devices
+            var epDevices = ortEnv.GetEpDevices();
+
+            // 2. Filter to your desired execution provider
+            var selectedEpDevices = epDevices
+                .Where(d => d.EpName == "CPUExecutionProvider")
+                .ToList();
+
+            if (selectedEpDevices.Count == 0)
+            {
+                throw new InvalidOperationException("CPUExecutionProvider is not available on this system.");
+            }
+
+            // 3. Configure provider-specific options (varies based on EP)
+            // and append the EP with the correct devices (varies based on EP)
+            var sessionOptions = new SessionOptions();
+            var epOptions = new Dictionary<string, string> { };
+            sessionOptions.AppendExecutionProvider(ortEnv, selectedEpDevices, epOptions);
+
+            return new InferenceSession("C:\\Users\\aleader\\Downloads\\model.onnx", sessionOptions);
         }
 
         public async Task<(PolitenessLevel level, string description)> AnalyzeTextAsync(string text)
