@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace CustomerSupportApp.Models
 {
@@ -12,5 +13,6 @@ namespace CustomerSupportApp.Models
         public DateTime ReceivedDate { get; set; }
         public string Priority { get; set; } = "Normal";
         public bool IsRead { get; set; }
+        public List<string> SuggestedResponses { get; set; } = new List<string>();
     }
 }

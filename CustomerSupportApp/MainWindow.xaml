@@ -288,8 +288,39 @@
 
                             <!-- Response Section -->
                             <StackPanel Grid.Row="4" Margin="0,32,0,0">
-                                <TextBlock Text="Your Response" FontSize="16" FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextPrimaryColor}" Margin="0,0,0,12"/>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" Text="Your Response" FontSize="16" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimaryColor}" VerticalAlignment="Center"/>
+                                    
+                                    <Button Grid.Column="0" Margin="140,0,0,0" 
+                                            Click="RefreshResponse_Click"
+                                            Background="Transparent" 
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            ToolTip="Get suggested response"
+                                            VerticalAlignment="Center"
+                                            Padding="8,4">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                        CornerRadius="4"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <TextBlock Text="🔄" FontSize="16" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F3F2F1"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </Grid>
                                 
                                 <TextBox Text="{Binding ResponseText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          Height="150" TextWrapping="Wrap" 

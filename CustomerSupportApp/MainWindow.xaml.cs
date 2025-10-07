@@ -38,5 +38,10 @@ namespace CustomerSupportApp
                 MessageBox.Show("Please enter a response before sending.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
+
+        private void RefreshResponse_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.GetRandomResponse();
+        }
     }
 }
