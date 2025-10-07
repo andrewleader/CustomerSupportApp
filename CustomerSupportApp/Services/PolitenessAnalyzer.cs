@@ -84,14 +84,16 @@ namespace CustomerSupportApp.Services
             // 1. Enumerate devices
             var epDevices = ortEnv.GetEpDevices();
 
+            const string epName = "DmlExecutionProvider";
+
             // 2. Filter to your desired execution provider
             var selectedEpDevices = epDevices
-                .Where(d => d.EpName == "CPUExecutionProvider")
+                .Where(d => d.EpName == epName)
                 .ToList();
 
             if (selectedEpDevices.Count == 0)
             {
-                throw new InvalidOperationException("CPUExecutionProvider is not available on this system.");
+                throw new InvalidOperationException($"{epName} is not available on this system.");
             }
 
             // 3. Configure provider-specific options (varies based on EP)
