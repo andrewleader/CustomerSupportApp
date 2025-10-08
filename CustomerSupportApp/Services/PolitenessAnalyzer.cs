@@ -3,8 +3,11 @@ using Microsoft.ML.OnnxRuntime.Tensors;
 using Microsoft.Windows.AI.MachineLearning;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Threading;
 
 namespace CustomerSupportApp.Services
 {
@@ -35,7 +38,7 @@ namespace CustomerSupportApp.Services
         private List<OrtEpDevice>? _availableDevices;
         private OrtEpDevice? _selectedDevice;
         private const int MaxSequenceLength = 512;
-        private const string ModelPath = "C:\\Users\\aleader\\Downloads\\model.onnx";
+        private string ModelPath = "";
 
         public event EventHandler<string>? InitializationStatusChanged;
 
@@ -76,6 +79,9 @@ namespace CustomerSupportApp.Services
             OnInitializationStatusChanged("Loading tokenizer...");
             _tokenizer = await Task.Run(() => new BertTokenizer());
 
+            OnInitializationStatusChanged("Downloading model...");
+            ModelPath = await DownloadModelAsync();
+
             OnInitializationStatusChanged("Enumerating devices...");
             await Task.Run(() =>
             {
@@ -91,6 +97,38 @@ namespace CustomerSupportApp.Services
 
             OnInitializationStatusChanged("Ready for device selection");
             _isPreInitialized = true;
+        }
+
+        public async Task<string> DownloadModelAsync()
+        {
+            // Get the file path of the ModelCatalog.json file that's included in the root project directory
+            string catalogFilePath = Path.Combine(AppContext.BaseDirectory, "ModelCatalog.json");
+
+            var source = await CatalogModelSource.CreateFromUri(new Uri(catalogFilePath));
+            var catalog = new WinMLModelCatalog(new CatalogModelSource[]
+            {
+                source
+            });
+
+            var model = await catalog.FindModel("polite-guard");
+
+            // Await the operation directly
+            CatalogModelInstanceResult result = await model.GetInstance();
+
+            if (result.Status == CatalogModelStatus.Available)
+            {
+                CatalogModelInstance instance = result.Instance;
+
+                // Get the model path
+                string modelPath = instance.ModelPaths[0] + "\\model.onnx";
+
+                return modelPath;
+            }
+            else
+            {
+                OnInitializationStatusChanged("Failed to download model");
+                throw new Exception("Failed to download model");
+            }
         }
 
         /// <summary>
