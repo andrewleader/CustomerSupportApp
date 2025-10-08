@@ -101,27 +101,28 @@ namespace CustomerSupportApp.Services
 
         public async Task<string> DownloadModelAsync()
         {
-            // Get the file path of the ModelCatalog.json file that's included in the root project directory
+            // Get our ModelCatalog.json file path from the application directory
             string catalogFilePath = Path.Combine(AppContext.BaseDirectory, "ModelCatalog.json");
 
+            // Create a CatalogModelSource from the local file
             var source = await CatalogModelSource.CreateFromUri(new Uri(catalogFilePath));
             var catalog = new WinMLModelCatalog(new CatalogModelSource[]
             {
                 source
             });
 
+            // Find the model by its name
             var model = await catalog.FindModel("polite-guard");
 
-            // Await the operation directly
+            // Download the model (if it's not already downloaded)
             CatalogModelInstanceResult result = await model.GetInstance();
 
             if (result.Status == CatalogModelStatus.Available)
             {
                 CatalogModelInstance instance = result.Instance;
 
-                // Get the model path
+                // Return the model path
                 string modelPath = instance.ModelPaths[0] + "\\model.onnx";
-
                 return modelPath;
             }
             else
