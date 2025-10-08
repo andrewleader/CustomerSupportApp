@@ -13,6 +13,8 @@ namespace CustomerSupportApp.Models
         public DateTime ReceivedDate { get; set; }
         public string Priority { get; set; } = "Normal";
         public bool IsRead { get; set; }
-        public List<string> SuggestedResponses { get; set; } = new List<string>();
+        
+        // Each response type has 4 variations: [0]=Impolite, [1]=Neutral, [2]=Somewhat Polite, [3]=Very Polite
+        public List<string[]> SuggestedResponses { get; set; } = new List<string[]>();
     }
 }

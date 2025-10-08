@@ -299,29 +299,81 @@
                                     <TextBlock Grid.Column="0" Text="Your Response" FontSize="16" FontWeight="SemiBold"
                                                Foreground="{StaticResource TextPrimaryColor}" VerticalAlignment="Center"/>
                                     
-                                    <Button Grid.Column="0" Margin="140,0,0,0" 
-                                            Click="RefreshResponse_Click"
-                                            Background="Transparent" 
-                                            BorderThickness="0"
-                                            Cursor="Hand"
-                                            ToolTip="Get suggested response"
-                                            VerticalAlignment="Center"
-                                            Padding="8,4">
-                                        <Button.Template>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}" 
-                                                        CornerRadius="4"
-                                                        Padding="{TemplateBinding Padding}">
-                                                    <TextBlock Text="🔄" FontSize="16" VerticalAlignment="Center"/>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#F3F2F1"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Button.Template>
-                                    </Button>
+                                    <!-- Response Navigation Buttons -->
+                                    <StackPanel Grid.Column="0" Margin="140,0,0,0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <!-- Less Polite (Left Arrow) -->
+                                        <Button Click="LessPoliteButton_Click"
+                                                Background="Transparent" 
+                                                BorderThickness="0"
+                                                Cursor="Hand"
+                                                ToolTip="Less polite version"
+                                                VerticalAlignment="Center"
+                                                Padding="8,4">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" 
+                                                            CornerRadius="4"
+                                                            Padding="{TemplateBinding Padding}">
+                                                        <TextBlock Text="◀" FontSize="14" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#F3F2F1"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                        
+                                        <!-- Random Response (Refresh) -->
+                                        <Button Click="RefreshResponse_Click"
+                                                Background="Transparent" 
+                                                BorderThickness="0"
+                                                Cursor="Hand"
+                                                ToolTip="Get random response"
+                                                VerticalAlignment="Center"
+                                                Padding="8,4"
+                                                Margin="4,0">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" 
+                                                            CornerRadius="4"
+                                                            Padding="{TemplateBinding Padding}">
+                                                        <TextBlock Text="🔄" FontSize="16" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#F3F2F1"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                        
+                                        <!-- More Polite (Right Arrow) -->
+                                        <Button Click="MorePoliteButton_Click"
+                                                Background="Transparent" 
+                                                BorderThickness="0"
+                                                Cursor="Hand"
+                                                ToolTip="More polite version"
+                                                VerticalAlignment="Center"
+                                                Padding="8,4">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" 
+                                                            CornerRadius="4"
+                                                            Padding="{TemplateBinding Padding}">
+                                                        <TextBlock Text="▶" FontSize="14" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#F3F2F1"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </StackPanel>
                                 </Grid>
                                 
                                 <TextBox Text="{Binding ResponseText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"

@@ -43,5 +43,15 @@ namespace CustomerSupportApp
         {
             _viewModel.GetRandomResponse();
         }
+
+        private void LessPoliteButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.NavigateToLessPolite();
+        }
+
+        private void MorePoliteButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.NavigateToMorePolite();
+        }
     }
 }
