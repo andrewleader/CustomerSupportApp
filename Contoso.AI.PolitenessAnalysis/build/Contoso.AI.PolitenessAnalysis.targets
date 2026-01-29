@@ -1,0 +1,38 @@
+<Project>
+  <PropertyGroup>
+    <ModelUrl>https://huggingface.co/Intel/polite-guard/resolve/b302b4b49319b6c7fb79dda6607d53526ac3a022/onnx/model.onnx?download=true</ModelUrl>
+    <ModelFileName>polite-guard-model.onnx</ModelFileName>
+    <ModelDirectory>$(MSBuildProjectDirectory)\Models</ModelDirectory>
+  </PropertyGroup>
+
+  <!-- Download model at build time for consuming projects -->
+  <Target Name="DownloadPolitenessModel" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <ModelFilePath>$(ModelDirectory)\$(ModelFileName)</ModelFilePath>
+    </PropertyGroup>
+    
+    <!-- Create Models directory if it doesn't exist -->
+    <MakeDir Directories="$(ModelDirectory)" Condition="!Exists('$(ModelDirectory)')" />
+    
+    <!-- Download model if it doesn't exist -->
+    <Message Text="[Contoso.AI.PolitenessAnalysis] Checking for model at: $(ModelFilePath)" Importance="high" />
+    <Message Text="[Contoso.AI.PolitenessAnalysis] Model already exists, skipping download." Importance="high" Condition="Exists('$(ModelFilePath)')" />
+    
+    <DownloadFile 
+      SourceUrl="$(ModelUrl)" 
+      DestinationFolder="$(ModelDirectory)"
+      DestinationFileName="$(ModelFileName)"
+      Condition="!Exists('$(ModelFilePath)')"
+      SkipUnchangedFiles="true" />
+      
+    <Message Text="[Contoso.AI.PolitenessAnalysis] Model downloaded successfully to: $(ModelFilePath)" Importance="high" Condition="!Exists('$(ModelFilePath)')" />
+    
+    <!-- Add the model to content items so it gets copied to output -->
+    <ItemGroup>
+      <Content Include="$(ModelFilePath)" Condition="Exists('$(ModelFilePath)')">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>Models\$(ModelFileName)</Link>
+      </Content>
+    </ItemGroup>
+  </Target>
+</Project>

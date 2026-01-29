@@ -8,6 +8,16 @@
     <ModelUrl>https://huggingface.co/Intel/polite-guard/resolve/b302b4b49319b6c7fb79dda6607d53526ac3a022/onnx/model.onnx?download=true</ModelUrl>
     <ModelFileName>polite-guard-model.onnx</ModelFileName>
     <ModelDirectory>$(MSBuildProjectDirectory)\Models</ModelDirectory>
+    
+    <!-- NuGet Package Configuration -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Contoso.AI.PolitenessAnalysis</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Contoso</Authors>
+    <Company>Contoso</Company>
+    <Description>AI-powered politeness analysis for text using ONNX Runtime. Model downloads automatically at build time.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +25,14 @@
     <PackageReference Include="System.Numerics.Tensors" Version="9.0.9" />
   </ItemGroup>
 
-  <!-- Include the model file in content (will be copied if it exists) -->
+  <!-- Include .targets file in NuGet package so consuming projects download the model -->
+  <ItemGroup>
+    <None Include="build\Contoso.AI.PolitenessAnalysis.targets" Pack="true" PackagePath="build" />
+    <None Include="build\Contoso.AI.PolitenessAnalysis.targets" Pack="true" PackagePath="buildTransitive" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- Include the model file locally for this project (not packed in NuGet) -->
   <ItemGroup>
     <None Include="Models\$(ModelFileName)" Condition="Exists('Models\$(ModelFileName)')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -23,7 +40,7 @@
     </None>
   </ItemGroup>
 
-  <!-- Download model at build time -->
+  <!-- Download model at build time for this project -->
   <Target Name="DownloadModel" BeforeTargets="BeforeBuild">
     <PropertyGroup>
       <ModelFilePath>$(ModelDirectory)\$(ModelFileName)</ModelFilePath>
