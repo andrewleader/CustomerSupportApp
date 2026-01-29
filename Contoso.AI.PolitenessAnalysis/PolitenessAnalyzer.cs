@@ -60,7 +60,7 @@ public sealed class PolitenessAnalyzer : IDisposable
 
             _sharedTokenizer = await Task.Run(() => new BertTokenizer());
 
-            _modelPath = await DownloadModelAsync();
+            _modelPath = GetModelPath();
 
             await Task.Run(() =>
             {
@@ -92,29 +92,17 @@ public sealed class PolitenessAnalyzer : IDisposable
         }
     }
 
-    private static async Task<string> DownloadModelAsync()
+    private static string GetModelPath()
     {
-        string catalogFilePath = Path.Combine(AppContext.BaseDirectory, "ModelCatalog.json");
-
-        var source = await CatalogModelSource.CreateFromUri(new Uri(catalogFilePath));
-        var catalog = new WinMLModelCatalog(new CatalogModelSource[]
+        // Look for the model in the Models subdirectory
+        string modelPath = Path.Combine(AppContext.BaseDirectory, "Models", "polite-guard-model.onnx");
+        
+        if (File.Exists(modelPath))
         {
-            source
-        });
-
-        var model = await catalog.FindModel("polite-guard");
-        CatalogModelInstanceResult result = await model.GetInstance();
-
-        if (result.Status == CatalogModelStatus.Available)
-        {
-            CatalogModelInstance instance = result.Instance;
-            string modelPath = instance.ModelPaths[0] + "\\model.onnx";
             return modelPath;
         }
-        else
-        {
-            throw new Exception("Failed to download model");
-        }
+
+        throw new FileNotFoundException($"Model file not found at: {modelPath}");
     }
 
     public static async Task<PolitenessAnalyzer> CreateAsync(PerformanceMode performanceMode = PerformanceMode.Performance)

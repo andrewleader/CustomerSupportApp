@@ -5,21 +5,45 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <ModelUrl>https://huggingface.co/Intel/polite-guard/resolve/b302b4b49319b6c7fb79dda6607d53526ac3a022/onnx/model.onnx?download=true</ModelUrl>
+    <ModelFileName>polite-guard-model.onnx</ModelFileName>
+    <ModelDirectory>$(MSBuildProjectDirectory)\Models</ModelDirectory>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="ModelCatalog.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="ModelCatalog.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.0.250930001-experimental1" />
     <PackageReference Include="System.Numerics.Tensors" Version="9.0.9" />
   </ItemGroup>
+
+  <!-- Include the model file in content (will be copied if it exists) -->
+  <ItemGroup>
+    <None Include="Models\$(ModelFileName)" Condition="Exists('Models\$(ModelFileName)')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Models\$(ModelFileName)</Link>
+    </None>
+  </ItemGroup>
+
+  <!-- Download model at build time -->
+  <Target Name="DownloadModel" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <ModelFilePath>$(ModelDirectory)\$(ModelFileName)</ModelFilePath>
+    </PropertyGroup>
+    
+    <!-- Create Models directory if it doesn't exist -->
+    <MakeDir Directories="$(ModelDirectory)" Condition="!Exists('$(ModelDirectory)')" />
+    
+    <!-- Download model if it doesn't exist -->
+    <Message Text="Checking for model at: $(ModelFilePath)" Importance="high" />
+    <Message Text="Model already exists, skipping download." Importance="high" Condition="Exists('$(ModelFilePath)')" />
+    
+    <DownloadFile 
+      SourceUrl="$(ModelUrl)" 
+      DestinationFolder="$(ModelDirectory)"
+      DestinationFileName="$(ModelFileName)"
+      Condition="!Exists('$(ModelFilePath)')"
+      SkipUnchangedFiles="true" />
+      
+    <Message Text="Model downloaded successfully to: $(ModelFilePath)" Importance="high" Condition="!Exists('$(ModelFilePath)')" />
+  </Target>
 
 </Project>

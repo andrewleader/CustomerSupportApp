@@ -399,3 +399,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Downloaded ML Models
+**/Models/*.onnx
+**/Models/*.onnx.*
