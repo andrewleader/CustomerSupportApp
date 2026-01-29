@@ -6,7 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CustomerSupportApp.Models;
-using CustomerSupportApp.Services;
+using Contoso.AI.PolitenessAnalysis;
+using PolitenessLevelEnum = Contoso.AI.PolitenessAnalysis.PolitenessLevel;
 
 namespace CustomerSupportApp.ViewModels
 {
@@ -17,7 +18,7 @@ namespace CustomerSupportApp.ViewModels
         private int _currentResponseIndex = 0;
         private int _currentPolitenessLevel = 3; // Start at most polite (0=impolite, 1=neutral, 2=somewhat polite, 3=very polite)
         private Random _random = new Random();
-        private PolitenessAnalyzer _politenessAnalyzer;
+        private PolitenessAnalyzer? _politenessAnalyzer;
         private CancellationTokenSource? _debounceTokenSource;
         private string _politenessStatus = string.Empty;
         private string _politenessLevel = string.Empty;
@@ -190,12 +191,18 @@ namespace CustomerSupportApp.ViewModels
                     PolitenessLevel = "";
                     InferenceTime = "";
 
-                    var result = await _politenessAnalyzer.AnalyzeTextAsync(_responseText);
+                    if (_politenessAnalyzer == null)
+                    {
+                        PolitenessStatus = "Analyzer not initialized";
+                        return;
+                    }
+
+                    var result = await _politenessAnalyzer.AnalyzeAsync(_responseText);
 
                     if (!token.IsCancellationRequested)
                     {
-                        PolitenessLevel = GetPolitenessLevelText(result.level);
-                        InferenceTime = $"{result.inferenceTimeMs}ms";
+                        PolitenessLevel = GetPolitenessLevelText(result.Level);
+                        InferenceTime = $"{result.InferenceTimeMs}ms";
                         PolitenessStatus = "";
                     }
                 }
@@ -212,23 +219,20 @@ namespace CustomerSupportApp.ViewModels
             }
         }
 
-        private string GetPolitenessLevelText(PolitenessLevel level)
+        private string GetPolitenessLevelText(PolitenessLevelEnum level)
         {
             return level switch
             {
-                Services.PolitenessLevel.Polite => "Polite",
-                Services.PolitenessLevel.SomewhatPolite => "Somewhat Polite",
-                Services.PolitenessLevel.Neutral => "Neutral",
-                Services.PolitenessLevel.Impolite => "Impolite",
+                PolitenessLevelEnum.Polite => "Polite",
+                PolitenessLevelEnum.SomewhatPolite => "Somewhat Polite",
+                PolitenessLevelEnum.Neutral => "Neutral",
+                PolitenessLevelEnum.Impolite => "Impolite",
                 _ => "Unknown"
             };
         }
 
         public MainViewModel()
         {
-            _politenessAnalyzer = PolitenessAnalyzer.Instance;
-            _politenessAnalyzer.InitializationStatusChanged += OnPolitenessInitializationStatusChanged;
-
             // Initialize the analyzer asynchronously and load devices
             _ = InitializePolitenessAnalyzerAsync();
 
@@ -619,11 +623,20 @@ namespace CustomerSupportApp.ViewModels
         {
             try
             {
-                // Pre-initialize (download EPs, load tokenizer, enumerate devices)
-                await _politenessAnalyzer.PreInitializeAsync();
+                PolitenessStatus = "Initializing...";
+
+                if (PolitenessAnalyzer.GetReadyState() == AIFeatureReadyState.NotReady)
+                {
+                    var result = await PolitenessAnalyzer.EnsureReadyAsync();
+                    if (result.Status != AIFeatureReadyResultState.Success)
+                    {
+                        PolitenessStatus = "Initialization failed";
+                        return;
+                    }
+                }
 
                 // Get available devices
-                var devices = await _politenessAnalyzer.GetAvailableDevicesAsync();
+                var devices = PolitenessAnalyzer.GetAvailableDevices();
                 AvailableDevices = new ObservableCollection<EpDeviceInfo>(devices);
 
                 // Select the first device by default
@@ -631,10 +644,14 @@ namespace CustomerSupportApp.ViewModels
                 {
                     SelectedDevice = AvailableDevices[0];
                 }
+                else
+                {
+                    PolitenessStatus = "No devices available";
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                PolitenessStatus = "Initialization failed";
+                PolitenessStatus = $"Initialization failed: {ex.Message}";
             }
         }
 
@@ -645,24 +662,26 @@ namespace CustomerSupportApp.ViewModels
 
             try
             {
-                // Initialize the inference session with the selected device
-                await _politenessAnalyzer.InitializeWithDeviceAsync(_selectedDevice.Device);
+                PolitenessStatus = "Loading model...";
+
+                // Dispose old analyzer if exists
+                _politenessAnalyzer?.Dispose();
+
+                // Create new analyzer with selected device
+                _politenessAnalyzer = await PolitenessAnalyzer.CreateAsync(_selectedDevice.Device);
                 
+                PolitenessStatus = "Ready";
+
                 // Re-analyze current text if any
                 if (!string.IsNullOrWhiteSpace(_responseText))
                 {
                     _ = AnalyzeResponseWithDebounceAsync();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                PolitenessStatus = "Device initialization failed";
+                PolitenessStatus = $"Device initialization failed: {ex.Message}";
             }
-        }
-
-        private void OnPolitenessInitializationStatusChanged(object? sender, string status)
-        {
-            PolitenessStatus = status;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -673,3 +692,4 @@ namespace CustomerSupportApp.ViewModels
         }
     }
 }
+

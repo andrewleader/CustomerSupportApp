@@ -1,13 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
-    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-	<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
-	<WindowsPackageType>None</WindowsPackageType>
+    <Nullable>enable</Nullable>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,15 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.0.250930001-experimental1" />
-	<PackageReference Include="System.Numerics.Tensors" Version="9.0.9" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Contoso.AI.PolitenessAnalysis\Contoso.AI.PolitenessAnalysis.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\" />
+    <PackageReference Include="System.Numerics.Tensors" Version="9.0.9" />
   </ItemGroup>
 
 </Project>

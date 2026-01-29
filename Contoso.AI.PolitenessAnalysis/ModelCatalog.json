@@ -1,0 +1,26 @@
+{
+  "base": "https://contoso.com/catalog-docs-link",
+  "models": [
+    {
+      "id": "polite-guard",
+      "alias": "polite-guard",
+      "name": "Polite Guard",
+      "version": "1.0.0",
+      "modelType": "ONNX",
+      "publisher": "Intel",
+      "executionProviders": "CPUExecutionProvider,DmlExecutionProvider,QNNExecutionProvider",
+      "description": "Evaluates politeness of text",
+      "modelSizeBytes": 438000000,
+      "license": "apache-2.0",
+      "licenseUri": "https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md",
+      "uri": "https://huggingface.co/Intel/polite-guard",
+      "files": [
+        {
+          "name": "model.onnx",
+          "uri": "https://huggingface.co/Intel/polite-guard/resolve/b302b4b49319b6c7fb79dda6607d53526ac3a022/onnx/model.onnx?download=true",
+          "sha256": "DD4BACE681C19F71CFA0C42B2EDE6B49BC53A7B5A16EE8D49F43BED26A9B813B"
+        }
+      ]
+    }
+  ]
+}
