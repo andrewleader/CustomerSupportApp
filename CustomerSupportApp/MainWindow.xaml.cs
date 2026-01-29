@@ -9,6 +9,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using CustomerSupportApp.ViewModels;
+using Contoso.AI.PolitenessAnalysis;
 
 namespace CustomerSupportApp
 {
@@ -24,6 +25,17 @@ namespace CustomerSupportApp
             InitializeComponent();
             _viewModel = new MainViewModel();
             DataContext = _viewModel;
+            
+            // Initialize Performance Mode ComboBox
+            PerformanceModeComboBox.ItemsSource = System.Enum.GetValues(typeof(PerformanceMode));
+            PerformanceModeComboBox.SelectedItem = _viewModel.SelectedPerformanceMode;
+            PerformanceModeComboBox.SelectionChanged += (s, e) =>
+            {
+                if (PerformanceModeComboBox.SelectedItem != null)
+                {
+                    _viewModel.SelectedPerformanceMode = (PerformanceMode)PerformanceModeComboBox.SelectedItem;
+                }
+            };
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)

@@ -15,7 +15,7 @@ public sealed class PolitenessAnalyzer : IDisposable
     private static List<OrtEpDevice>? _availableDevices;
     
     private InferenceSession? _inferenceSession;
-    private OrtEpDevice? _selectedDevice;
+    private PerformanceMode _performanceMode;
     private const int MaxSequenceLength = 512;
 
     public event EventHandler<string>? InitializationStatusChanged;
@@ -117,22 +117,7 @@ public sealed class PolitenessAnalyzer : IDisposable
         }
     }
 
-    public static List<EpDeviceInfo> GetAvailableDevices()
-    {
-        if (_readyState != AIFeatureReadyState.Ready || _availableDevices == null)
-        {
-            return new List<EpDeviceInfo>();
-        }
-
-        return _availableDevices.Select(d => new EpDeviceInfo
-        {
-            Name = d.EpName,
-            DisplayName = d.EpName,
-            Device = d
-        }).ToList();
-    }
-
-    public static async Task<PolitenessAnalyzer> CreateAsync(OrtEpDevice? device = null)
+    public static async Task<PolitenessAnalyzer> CreateAsync(PerformanceMode performanceMode = PerformanceMode.Performance)
     {
         if (_readyState != AIFeatureReadyState.Ready)
         {
@@ -145,14 +130,8 @@ public sealed class PolitenessAnalyzer : IDisposable
 
         var analyzer = new PolitenessAnalyzer();
         
-        var selectedDevice = device ?? _availableDevices?.FirstOrDefault();
-        if (selectedDevice == null)
-        {
-            throw new InvalidOperationException("No execution providers available");
-        }
-
-        analyzer._selectedDevice = selectedDevice;
-        analyzer._inferenceSession = await Task.Run(() => analyzer.CreateInferenceSession(selectedDevice));
+        analyzer._performanceMode = performanceMode;
+        analyzer._inferenceSession = await Task.Run(() => analyzer.CreateInferenceSession(performanceMode));
 
         return analyzer;
     }
@@ -188,7 +167,7 @@ public sealed class PolitenessAnalyzer : IDisposable
         };
     }
 
-    private InferenceSession CreateInferenceSession(OrtEpDevice device)
+    private InferenceSession CreateInferenceSession(PerformanceMode performanceMode)
     {
         if (_sharedOrtEnv == null || _modelPath == null)
         {
@@ -196,8 +175,7 @@ public sealed class PolitenessAnalyzer : IDisposable
         }
 
         var sessionOptions = new SessionOptions();
-        var epOptions = new Dictionary<string, string> { };
-        sessionOptions.AppendExecutionProvider(_sharedOrtEnv, new List<OrtEpDevice> { device }, epOptions);
+        sessionOptions.SetEpSelectionPolicy(performanceMode == PerformanceMode.Performance ? ExecutionProviderDevicePolicy.MAX_PERFORMANCE : ExecutionProviderDevicePolicy.MAX_EFFICIENCY);
 
         return new InferenceSession(_modelPath, sessionOptions);
     }

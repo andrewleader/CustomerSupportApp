@@ -398,18 +398,16 @@
 
                             <!-- Politeness Indicator -->
                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                <!-- Device Selector -->
+                                <!-- Performance Mode Selector -->
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                    <TextBlock Text="Device:" 
+                                    <TextBlock Text="Mode:" 
                                                FontSize="13" 
                                                FontWeight="SemiBold"
                                                Foreground="{StaticResource TextSecondaryColor}"
                                                VerticalAlignment="Center"
                                                Margin="0,0,8,0"/>
-                                    <ComboBox ItemsSource="{Binding AvailableDevices}"
-                                              SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
-                                              DisplayMemberPath="DisplayName"
-                                              MinWidth="250"
+                                    <ComboBox x:Name="PerformanceModeComboBox"
+                                              MinWidth="150"
                                               FontSize="12"
                                               Padding="8,4"
                                               BorderBrush="{StaticResource BorderColor}"/>

@@ -23,35 +23,21 @@ namespace CustomerSupportApp.ViewModels
         private string _politenessStatus = string.Empty;
         private string _politenessLevel = string.Empty;
         private string _inferenceTime = string.Empty;
-        private ObservableCollection<EpDeviceInfo> _availableDevices = new ObservableCollection<EpDeviceInfo>();
-        private EpDeviceInfo? _selectedDevice;
+        private PerformanceMode _selectedPerformanceMode = PerformanceMode.Performance;
         private const int DebounceDelayMs = 800;
 
         public ObservableCollection<CustomerQuestion> CustomerQuestions { get; set; }
 
-        public ObservableCollection<EpDeviceInfo> AvailableDevices
+        public PerformanceMode SelectedPerformanceMode
         {
-            get => _availableDevices;
+            get => _selectedPerformanceMode;
             set
             {
-                if (_availableDevices != value)
+                if (_selectedPerformanceMode != value)
                 {
-                    _availableDevices = value;
+                    _selectedPerformanceMode = value;
                     OnPropertyChanged();
-                }
-            }
-        }
-
-        public EpDeviceInfo? SelectedDevice
-        {
-            get => _selectedDevice;
-            set
-            {
-                if (_selectedDevice != value)
-                {
-                    _selectedDevice = value;
-                    OnPropertyChanged();
-                    _ = OnDeviceSelectionChangedAsync();
+                    _ = OnPerformanceModeChangedAsync();
                 }
             }
         }
@@ -635,19 +621,10 @@ namespace CustomerSupportApp.ViewModels
                     }
                 }
 
-                // Get available devices
-                var devices = PolitenessAnalyzer.GetAvailableDevices();
-                AvailableDevices = new ObservableCollection<EpDeviceInfo>(devices);
-
-                // Select the first device by default
-                if (AvailableDevices.Count > 0)
-                {
-                    SelectedDevice = AvailableDevices[0];
-                }
-                else
-                {
-                    PolitenessStatus = "No devices available";
-                }
+                // Initialize with default performance mode
+                _politenessAnalyzer = await PolitenessAnalyzer.CreateAsync(_selectedPerformanceMode);
+                
+                PolitenessStatus = "Ready";
             }
             catch (Exception ex)
             {
@@ -655,20 +632,17 @@ namespace CustomerSupportApp.ViewModels
             }
         }
 
-        private async Task OnDeviceSelectionChangedAsync()
+        private async Task OnPerformanceModeChangedAsync()
         {
-            if (_selectedDevice == null)
-                return;
-
             try
             {
-                PolitenessStatus = "Loading model...";
+                PolitenessStatus = "Switching mode...";
 
                 // Dispose old analyzer if exists
                 _politenessAnalyzer?.Dispose();
 
-                // Create new analyzer with selected device
-                _politenessAnalyzer = await PolitenessAnalyzer.CreateAsync(_selectedDevice.Device);
+                // Create new analyzer with selected performance mode
+                _politenessAnalyzer = await PolitenessAnalyzer.CreateAsync(_selectedPerformanceMode);
                 
                 PolitenessStatus = "Ready";
 
@@ -680,7 +654,7 @@ namespace CustomerSupportApp.ViewModels
             }
             catch (Exception ex)
             {
-                PolitenessStatus = $"Device initialization failed: {ex.Message}";
+                PolitenessStatus = $"Mode change failed: {ex.Message}";
             }
         }
 
