@@ -163,7 +163,8 @@ public sealed class PolitenessAnalyzer : IDisposable
         }
 
         var sessionOptions = new SessionOptions();
-        sessionOptions.SetEpSelectionPolicy(performanceMode == PerformanceMode.Performance ? ExecutionProviderDevicePolicy.MAX_PERFORMANCE : ExecutionProviderDevicePolicy.MAX_EFFICIENCY);
+        sessionOptions.SetEpSelectionPolicy(ExecutionProviderDevicePolicy.PREFER_CPU);
+        //sessionOptions.SetEpSelectionPolicy(performanceMode == PerformanceMode.Performance ? ExecutionProviderDevicePolicy.MAX_PERFORMANCE : ExecutionProviderDevicePolicy.MAX_EFFICIENCY);
 
         return new InferenceSession(_modelPath, sessionOptions);
     }
